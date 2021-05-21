@@ -26,6 +26,10 @@ class RoutePlanner {
     RouteModel::Node *start_node;
     RouteModel::Node *end_node;
 
+    static float GetMaxNode(RouteModel::Node *a,RouteModel::Node *b){
+        return (a->g_value+a->h_value)>(b->g_value+b->h_value);
+    }
+
     float distance = 0.0f;
     RouteModel &m_Model;
 };

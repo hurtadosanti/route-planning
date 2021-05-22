@@ -49,14 +49,14 @@ void RoutePlanner::AddNeighbors(RouteModel::Node *current_node) {
 // - Remove that node from the open_list.
 // - Return the pointer.
 RouteModel::Node *RoutePlanner::NextNode() {
-    std::sort(this->open_list.begin(),this->open_list.end(), GetMaxNode);
-    auto n = this->open_list.back();
-    this->open_list.pop_back();
+    std::sort(this->open_list.begin(),this->open_list.end(), [](auto a, auto b){
+        return (a->g_value+a->h_value)<(b->g_value+b->h_value);
+    });
+    auto n = this->open_list.front();
+    this->open_list.erase(open_list.begin());
     return n;
 }
 
-
-// TODO 6: Complete the ConstructFinalPath method to return the final path found from your A* search.
 // Tips:
 // - This method should take the current (final) node as an argument and iteratively follow the 
 //   chain of parents of nodes until the starting node is found.
@@ -68,16 +68,18 @@ std::vector<RouteModel::Node> RoutePlanner::ConstructFinalPath(RouteModel::Node 
     // Create path_found vector
     distance = 0.0f;
     std::vector<RouteModel::Node> path_found;
-
-    // TODO: Implement your solution here.
-
+    while (current_node!= nullptr){
+        path_found.insert(path_found.begin(),*current_node);
+        if(current_node->parent!= nullptr) {
+            distance += current_node->distance(*current_node->parent);
+        }
+        current_node = current_node->parent;
+    }
     distance *= m_Model.MetricScale(); // Multiply the distance by the scale of the map to get meters.
     return path_found;
 
 }
 
-
-// TODO 7: Write the A* Search algorithm here.
 // Tips:
 // - Use the AddNeighbors method to add all of the neighbors of the current node to the open_list.
 // - Use the NextNode() method to sort the open_list and return the next node.
@@ -85,8 +87,15 @@ std::vector<RouteModel::Node> RoutePlanner::ConstructFinalPath(RouteModel::Node 
 // - Store the final path in the m_Model.path attribute before the method exits. This path will then be displayed on the map tile.
 
 void RoutePlanner::AStarSearch() {
-    RouteModel::Node *current_node = nullptr;
-
-    // TODO: Implement your solution here.
-
+    RouteModel::Node *current_node;
+    open_list.push_back(start_node);
+    start_node->visited = true;
+    while (!open_list.empty()){
+        current_node=NextNode();
+        if(current_node->distance(*end_node)==0){
+            this->m_Model.path=ConstructFinalPath(end_node);
+            return;
+        }
+        AddNeighbors(current_node);
+    }
 }
